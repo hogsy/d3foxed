@@ -365,6 +365,13 @@ void idLight::Spawn( void ) {
 		Off();
 	}
 
+#ifdef CTF
+    // Midnight CTF
+    if ( gameLocal.mpGame.IsGametypeFlagBased() && gameLocal.serverInfo.GetBool("si_midnight") && !spawnArgs.GetBool("midnight_override") ) {
+        Off();
+    }
+#endif
+
 	health = spawnArgs.GetInt( "health", "0" );
 	spawnArgs.GetString( "broken", "", brokenModel );
 	spawnArgs.GetBool( "break", "0", breakOnTrigger );
@@ -1146,9 +1153,9 @@ bool idLight::ClientReceiveEvent( int event, int time, const idBitMsg &msg ) {
 			BecomeBroken( NULL );
 			return true;
 		}
-    default: {
+		default: {
       break;
-    }
+		}
 	}
 
   return idEntity::ClientReceiveEvent( event, time, msg );

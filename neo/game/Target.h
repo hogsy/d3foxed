@@ -321,6 +321,13 @@ idTarget_SetInfluence
 ===============================================================================
 */
 
+#ifdef _D3XP
+typedef struct SavedGui_s {
+	SavedGui_s() {memset(gui, 0, sizeof(idUserInterface*)*MAX_RENDERENTITY_GUI); };
+	idUserInterface*	gui[MAX_RENDERENTITY_GUI];
+} SavedGui_t;
+#endif
+
 class idTarget_SetInfluence : public idTarget {
 public:
 	CLASS_PROTOTYPE( idTarget_SetInfluence );
@@ -353,6 +360,10 @@ private:
 	idInterpolate<float>fovSetting;
 	bool				soundFaded;
 	bool				restoreOnTrigger;
+
+#ifdef _D3XP
+	idList<SavedGui_t>	savedGuiList;
+#endif
 };
 
 

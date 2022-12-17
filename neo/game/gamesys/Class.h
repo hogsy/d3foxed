@@ -57,7 +57,7 @@ struct idEventFunc {
 class idEventArg {
 public:
 	int			type;
-	intptr_t value;
+	intptr_t	value;
 
 	idEventArg()								{ type = D_EVENT_INTEGER; value = 0; };
 	idEventArg( int data )						{ type = D_EVENT_INTEGER; value = data; };
@@ -258,7 +258,7 @@ private:
 	static idList<idTypeInfo *>	types;
 	static idList<idTypeInfo *>	typenums;
 	static int					typeNumBits;
-	static int					memused;
+	static size_t				memused;
 	static int					numobjects;
 };
 

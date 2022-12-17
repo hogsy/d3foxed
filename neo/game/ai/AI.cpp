@@ -347,6 +347,11 @@ idAI::idAI() {
 	current_yaw			= 0.0f;
 	ideal_yaw			= 0.0f;
 
+#ifdef _D3XP
+	spawnClearMoveables	= false;
+	harvestEnt			= NULL;
+#endif
+
 	num_cinematics		= 0;
 	current_cinematic	= 0;
 
@@ -395,6 +400,12 @@ idAI::~idAI() {
 		gameRenderWorld->FreeLightDef( worldMuzzleFlashHandle );
 		worldMuzzleFlashHandle = -1;
 	}
+
+#ifdef _D3XP
+	if ( harvestEnt.GetEntity() ) {
+		harvestEnt.GetEntity()->PostEventMS( &EV_Remove, 0 );
+	}
+#endif
 }
 
 /*
@@ -527,6 +538,18 @@ void idAI::Save( idSaveGame *savefile ) const {
 	savefile->WriteJoint( flyTiltJoint );
 
 	savefile->WriteBool( GetPhysics() == static_cast<const idPhysics *>(&physicsObj) );
+
+#ifdef _D3XP
+	savefile->WriteInt(funcEmitters.Num());
+	for(int i = 0; i < funcEmitters.Num(); i++) {
+		funcEmitter_t* emitter = funcEmitters.GetIndex(i);
+		savefile->WriteString(emitter->name);
+		savefile->WriteJoint(emitter->joint);
+		savefile->WriteObject(emitter->particle);
+	}
+
+	harvestEnt.Save( savefile);
+#endif
 }
 
 /*
@@ -694,6 +717,42 @@ void idAI::Restore( idRestoreGame *savefile ) {
 	if ( restorePhysics ) {
 		RestorePhysics( &physicsObj );
 	}
+
+#ifdef _D3XP
+
+	//Clean up the emitters
+	for(int i = 0; i < funcEmitters.Num(); i++) {
+		funcEmitter_t* emitter = funcEmitters.GetIndex(i);
+		if(emitter->particle) {
+			//Destroy the emitters
+			emitter->particle->PostEventMS(&EV_Remove, 0 );
+		}
+	}
+	funcEmitters.Clear();
+
+	int emitterCount;
+	savefile->ReadInt( emitterCount );
+	for(int i = 0; i < emitterCount; i++) {
+		funcEmitter_t newEmitter;
+		memset(&newEmitter, 0, sizeof(newEmitter));
+
+		idStr name;
+		savefile->ReadString( name );
+
+		strcpy( newEmitter.name, name.c_str() );
+
+		savefile->ReadJoint( newEmitter.joint );
+		savefile->ReadObject(reinterpret_cast<idClass *&>(newEmitter.particle));
+
+		funcEmitters.Set(newEmitter.name, newEmitter);
+	}
+
+	harvestEnt.Restore(savefile);
+	//if(harvestEnt.GetEntity()) {
+	//	harvestEnt.GetEntity()->SetParent(this);
+	//}
+
+#endif
 }
 
 /*
@@ -928,7 +987,23 @@ void idAI::Spawn( void ) {
 
 	// init the move variables
 	StopMove( MOVE_STATUS_DONE );
+
+
+#ifdef _D3XP
+	spawnArgs.GetBool( "spawnClearMoveables", "0", spawnClearMoveables );
+#endif
 }
+
+
+#ifdef _D3XP
+void idAI::Gib( const idVec3 &dir, const char *damageDefName ) {
+	if(harvestEnt.GetEntity()) {
+		//Let the harvest ent know that we gibbed
+		harvestEnt.GetEntity()->Gib();
+	}
+	idActor::Gib(dir, damageDefName);
+}
+#endif
 
 /*
 ===================
@@ -1153,6 +1228,13 @@ void idAI::Think( void ) {
 	Present();
 	UpdateDamageEffects();
 	LinkCombat();
+
+#ifdef _D3XP
+	if(ai_showHealth.GetBool()) {
+		idVec3 aboveHead(0,0,20);
+		gameRenderWorld->DrawText( va( "%d", ( int )health), this->GetEyePosition()+aboveHead, 0.5f, colorWhite, gameLocal.GetLocalPlayer()->viewAngles.ToMat3() );
+	}
+#endif
 }
 
 /***********************************************************************
@@ -2711,6 +2793,9 @@ void idAI::AnimMove( void ) {
 		}
 	}
 
+#ifdef _D3XP
+	physicsObj.UseFlyMove( false );
+#endif
 	physicsObj.SetDelta( delta );
 	physicsObj.ForceDeltaMove( disableGravity );
 
@@ -3306,7 +3391,7 @@ const idDeclParticle *idAI::SpawnParticlesOnJoint( particleEmitter_t &pe, const 
 			pe.time = gameLocal.time;
 		}
 		pe.particle = static_cast<const idDeclParticle *>( declManager->FindType( DECL_PARTICLE, particleName ) );
-		gameLocal.smokeParticles->EmitSmoke( pe.particle, pe.time, gameLocal.random.CRandomFloat(), origin, axis );
+		gameLocal.smokeParticles->EmitSmoke( pe.particle, pe.time, gameLocal.random.CRandomFloat(), origin, axis, timeGroup /*_D3XP*/ );
 	}
 
 	return pe.particle;
@@ -3390,6 +3475,10 @@ void idAI::Killed( idEntity *inflictor, idEntity *attacker, int damage, const id
 		physicsObj.SetLinearVelocity( vec3_zero );
 		physicsObj.PutToRest();
 		physicsObj.DisableImpact();
+#ifdef _D3XP
+		// No grabbing if "model_death"
+		noGrab = true;
+#endif
 	}
 
 	restartParticles = false;
@@ -3408,9 +3497,29 @@ void idAI::Killed( idEntity *inflictor, idEntity *attacker, int damage, const id
 		kv = spawnArgs.MatchPrefix( "def_drops", kv );
 	}
 
+#ifndef _D3XP
 	if ( ( attacker && attacker->IsType( idPlayer::Type ) ) && ( inflictor && !inflictor->IsType( idSoulCubeMissile::Type ) ) ) {
 		static_cast< idPlayer* >( attacker )->AddAIKill();
 	}
+#endif
+
+#ifdef _D3XP
+	if(spawnArgs.GetBool("harvest_on_death")) {
+		const idDict *harvestDef = gameLocal.FindEntityDefDict( spawnArgs.GetString("def_harvest_type"), false );
+		if ( harvestDef ) {
+			idEntity *temp;
+			gameLocal.SpawnEntityDef( *harvestDef, &temp, false );
+			harvestEnt = static_cast<idHarvestable *>(temp);
+
+		}
+
+		if(harvestEnt.GetEntity()) {
+			//Let the harvest entity set itself up
+			harvestEnt.GetEntity()->Init(this);
+			harvestEnt.GetEntity()->BecomeActive( TH_THINK );
+		}
+	}
+#endif
 }
 
 /***********************************************************************
@@ -3571,6 +3680,13 @@ void idAI::TalkTo( idActor *actor ) {
 	if ( talk_state != TALK_OK ) {
 		return;
 	}
+
+#ifdef _D3XP
+	// Wake up monsters that are pretending to be NPC's
+	if ( team == 1 && actor->team != team ) {
+		ProcessEvent( &EV_Activate, actor );
+	}
+#endif
 
 	talkTarget = actor;
 	if ( actor ) {
@@ -4009,6 +4125,13 @@ bool idAI::GetAimDir( const idVec3 &firePos, idEntity *aimAtEnt, const idEntity 
 		targetPos2 = targetPos1;
 	}
 
+#ifdef _D3XP
+	if ( this->team == 0 && !idStr::Cmp( aimAtEnt->GetEntityDefName(), "monster_demon_vulgar" ) ) {
+		targetPos1.z -= 28.f;
+		targetPos2.z -= 12.f;
+	}
+#endif
+
 	// try aiming for chest
 	delta = firePos - targetPos1;
 	max_height = delta.LengthFast() * projectile_height_to_distance_ratio;
@@ -4107,6 +4230,10 @@ idProjectile *idAI::LaunchProjectile( const char *jointname, idEntity *target, b
 	int					num_projectiles;
 	int					i;
 	idMat3				axis;
+#ifdef _D3XP
+	idMat3				proj_axis;
+	bool				forceMuzzle;
+#endif
 	idVec3				tmp;
 	idProjectile		*lastProjectile;
 
@@ -4119,6 +4246,9 @@ idProjectile *idAI::LaunchProjectile( const char *jointname, idEntity *target, b
 	attack_cone = spawnArgs.GetFloat( "attack_cone", "70" );
 	projectile_spread = spawnArgs.GetFloat( "projectile_spread", "0" );
 	num_projectiles = spawnArgs.GetInt( "num_projectiles", "1" );
+#ifdef _D3XP
+	forceMuzzle = spawnArgs.GetBool( "forceMuzzle", "0" );
+#endif
 
 	GetMuzzle( jointname, muzzle, axis );
 
@@ -4141,27 +4271,33 @@ idProjectile *idAI::LaunchProjectile( const char *jointname, idEntity *target, b
 	axis[2] = axis[0];
 	axis[0] = -tmp;
 
-	// make sure the projectile starts inside the monster bounding box
-	const idBounds &ownerBounds = physicsObj.GetAbsBounds();
-	projClip = lastProjectile->GetPhysics()->GetClipModel();
-	projBounds = projClip->GetBounds().Rotate( axis );
+#ifdef _D3XP
+	proj_axis = axis;
+#endif
 
-	// check if the owner bounds is bigger than the projectile bounds
-	if ( ( ( ownerBounds[1][0] - ownerBounds[0][0] ) > ( projBounds[1][0] - projBounds[0][0] ) ) &&
-		( ( ownerBounds[1][1] - ownerBounds[0][1] ) > ( projBounds[1][1] - projBounds[0][1] ) ) &&
-		( ( ownerBounds[1][2] - ownerBounds[0][2] ) > ( projBounds[1][2] - projBounds[0][2] ) ) ) {
-		if ( (ownerBounds - projBounds).RayIntersection( muzzle, viewAxis[ 0 ], distance ) ) {
-			start = muzzle + distance * viewAxis[ 0 ];
+	if ( !forceMuzzle ) {	// _D3XP
+		// make sure the projectile starts inside the monster bounding box
+		const idBounds &ownerBounds = physicsObj.GetAbsBounds();
+		projClip = lastProjectile->GetPhysics()->GetClipModel();
+		projBounds = projClip->GetBounds().Rotate( axis );
+
+		// check if the owner bounds is bigger than the projectile bounds
+		if ( ( ( ownerBounds[1][0] - ownerBounds[0][0] ) > ( projBounds[1][0] - projBounds[0][0] ) ) &&
+			( ( ownerBounds[1][1] - ownerBounds[0][1] ) > ( projBounds[1][1] - projBounds[0][1] ) ) &&
+			( ( ownerBounds[1][2] - ownerBounds[0][2] ) > ( projBounds[1][2] - projBounds[0][2] ) ) ) {
+			if ( (ownerBounds - projBounds).RayIntersection( muzzle, viewAxis[ 0 ], distance ) ) {
+				start = muzzle + distance * viewAxis[ 0 ];
+			} else {
+				start = ownerBounds.GetCenter();
+			}
 		} else {
+			// projectile bounds bigger than the owner bounds, so just start it from the center
 			start = ownerBounds.GetCenter();
 		}
-	} else {
-		// projectile bounds bigger than the owner bounds, so just start it from the center
-		start = ownerBounds.GetCenter();
-	}
 
-	gameLocal.clip.Translation( tr, start, muzzle, projClip, axis, MASK_SHOT_RENDERMODEL, this );
-	muzzle = tr.endpos;
+		gameLocal.clip.Translation( tr, start, muzzle, projClip, axis, MASK_SHOT_RENDERMODEL, this );
+		muzzle = tr.endpos;
+	}
 
 	// set aiming direction
 	GetAimDir( muzzle, target, this, dir );
@@ -4663,6 +4799,10 @@ void idAI::UpdateParticles( void ) {
 
 		int particlesAlive = 0;
 		for ( int i = 0; i < particles.Num(); i++ ) {
+#ifdef _D3XP
+			// Smoke particles on AI characters will always be "slow", even when held by grabber
+			SetTimeState ts(TIME_GROUP1);
+#endif
 			if ( particles[i].particle && particles[i].time ) {
 				particlesAlive++;
 				if (af.IsActive()) {
@@ -4674,7 +4814,7 @@ void idAI::UpdateParticles( void ) {
 					realVector = physicsObj.GetOrigin() + ( realVector + modelOffset ) * ( viewAxis * physicsObj.GetGravityAxis() );
 				}
 
-				if ( !gameLocal.smokeParticles->EmitSmoke( particles[i].particle, particles[i].time, gameLocal.random.CRandomFloat(), realVector, realAxis )) {
+				if ( !gameLocal.smokeParticles->EmitSmoke( particles[i].particle, particles[i].time, gameLocal.random.CRandomFloat(), realVector, realAxis, timeGroup /*_D3XP*/ )) {
 					if ( restartParticles ) {
 						particles[i].time = gameLocal.time;
 					} else {
@@ -4706,6 +4846,114 @@ void idAI::TriggerParticles( const char *jointName ) {
 		}
 	}
 }
+
+#ifdef _D3XP
+void idAI::TriggerFX( const char* joint, const char* fx ) {
+
+	if( !strcmp(joint, "origin") ) {
+		idEntityFx::StartFx( fx, NULL, NULL, this, true );
+	} else {
+		idVec3	joint_origin;
+		idMat3	joint_axis;
+		jointHandle_t jointNum;
+		jointNum = animator.GetJointHandle( joint );
+
+		if ( jointNum == INVALID_JOINT ) {
+			gameLocal.Warning( "Unknown fx joint '%s' on entity %s", joint, name.c_str() );
+			return;
+		}
+
+		GetJointWorldTransform( jointNum, gameLocal.time, joint_origin, joint_axis );
+		idEntityFx::StartFx( fx, &joint_origin, &joint_axis, this, true );
+	}
+}
+
+idEntity* idAI::StartEmitter( const char* name, const char* joint, const char* particle ) {
+
+	idEntity* existing = GetEmitter(name);
+	if(existing) {
+		return existing;
+	}
+
+	jointHandle_t jointNum;
+	jointNum = animator.GetJointHandle( joint );
+
+	idVec3 offset;
+	idMat3 axis;
+
+	GetJointWorldTransform( jointNum, gameLocal.time, offset, axis );
+
+	/*animator.GetJointTransform( jointNum, gameLocal.time, offset, axis );
+	offset = GetPhysics()->GetOrigin() + offset * GetPhysics()->GetAxis();
+	axis = axis * GetPhysics()->GetAxis();*/
+
+
+
+	idDict args;
+
+	const idDeclEntityDef *emitterDef = gameLocal.FindEntityDef( "func_emitter", false );
+	args = emitterDef->dict;
+	args.Set("model", particle);
+	args.Set( "origin", offset.ToString() );
+	args.SetBool("start_off", true);
+
+	idEntity* ent;
+	gameLocal.SpawnEntityDef(args, &ent, false);
+
+	ent->GetPhysics()->SetOrigin(offset);
+	//ent->GetPhysics()->SetAxis(axis);
+
+	// align z-axis of model with the direction
+	/*idVec3		tmp;
+	axis = (viewAxis[ 0 ] * physicsObj.GetGravityAxis()).ToMat3();
+	tmp = axis[2];
+	axis[2] = axis[0];
+	axis[0] = -tmp;
+
+	ent->GetPhysics()->SetAxis(axis);*/
+
+	axis = physicsObj.GetGravityAxis();
+	ent->GetPhysics()->SetAxis(axis);
+
+
+	ent->GetPhysics()->GetClipModel()->SetOwner( this );
+
+
+	//Keep a reference to the emitter so we can track it
+	funcEmitter_t newEmitter;
+	strcpy(newEmitter.name, name);
+	newEmitter.particle = (idFuncEmitter*)ent;
+	newEmitter.joint = jointNum;
+	funcEmitters.Set(newEmitter.name, newEmitter);
+
+	//Bind it to the joint and make it active
+	newEmitter.particle->BindToJoint(this, jointNum, true);
+	newEmitter.particle->BecomeActive(TH_THINK);
+	newEmitter.particle->Show();
+	newEmitter.particle->PostEventMS(&EV_Activate, 0, this);
+	return newEmitter.particle;
+}
+
+idEntity* idAI::GetEmitter( const char* name ) {
+	funcEmitter_t* emitter;
+	funcEmitters.Get(name, &emitter);
+	if(emitter) {
+		return emitter->particle;
+	}
+	return NULL;
+}
+
+void idAI::StopEmitter( const char* name ) {
+	funcEmitter_t* emitter;
+	funcEmitters.Get(name, &emitter);
+	if(emitter) {
+		emitter->particle->Unbind();
+		emitter->particle->PostEventMS( &EV_Remove, 0 );
+		funcEmitters.Remove(name);
+	}
+}
+
+#endif
 
 
 /***********************************************************************

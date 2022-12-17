@@ -39,8 +39,8 @@ class idRestoreGame;
 #define MAX_STRING_LEN		128
 #define MAX_GLOBALS			296608			// in bytes - DG: increased this for better support of mods that use the vanilla game dll
 #define MAX_STRINGS			1024
-#define MAX_FUNCS			3072
-#define MAX_STATEMENTS		81920			// statement_t - 18 bytes last I checked
+#define MAX_FUNCS			3584
+#define MAX_STATEMENTS		131072			// statement_t - 18 bytes last I checked
 
 typedef enum {
 	ev_error = -1, ev_void, ev_scriptevent, ev_namespace, ev_string, ev_float, ev_vector, ev_entity, ev_field, ev_function, ev_virtualfunction, ev_pointer, ev_object, ev_jumpoffset, ev_argsize, ev_boolean
@@ -56,16 +56,16 @@ public:
 	void				Clear( void );
 
 private:
-	idStr				name;
+	idStr 				name;
 public:
 	const idEventDef	*eventdef;
 	idVarDef			*def;
 	const idTypeDef		*type;
-	int					firstStatement;
-	int					numStatements;
-	int					parmTotal;
-	int					locals;			// total ints of parms + locals
-	int					filenum;			// source file defined in
+	int 				firstStatement;
+	int 				numStatements;
+	int 				parmTotal;
+	int 				locals; 			// total ints of parms + locals
+	int					filenum; 			// source file defined in
 	idList<int>			parmSize;
 };
 
@@ -74,8 +74,8 @@ typedef union eval_s {
 	float				_float;
 	float				vector[ 3 ];
 	function_t			*function;
-	int					_int;
-	int					entity;
+	int 				_int;
+	int 				entity;
 } eval_t;
 
 /***********************************************************************
@@ -89,7 +89,7 @@ Contains type information for variables and functions.
 class idTypeDef {
 private:
 	etype_t						type;
-	idStr						name;
+	idStr 						name;
 	int							size;
 
 	// function types are more complex
@@ -293,9 +293,9 @@ typedef union varEval_s {
 	float					*floatPtr;
 	idVec3					*vectorPtr;
 	function_t				*functionPtr;
-	int						*intPtr;
+	int 					*intPtr;
 	byte					*bytePtr;
-	int						*entityNumberPtr;
+	int 					*entityNumberPtr;
 	int						virtualFunction;
 	int						jumpOffset;
 	int						stackOffset;		// offset in stack for local variables
@@ -312,7 +312,7 @@ class idVarDef {
 public:
 	int						num;			// global index/ID of variable
 	varEval_t				value;
-	idVarDef *				scope;			// function, namespace, or object the var was defined in
+	idVarDef *				scope; 			// function, namespace, or object the var was defined in
 	int						numUsers;		// number of users if this is a constant
 
 	typedef enum {
@@ -440,7 +440,7 @@ single idProgram.
 class idProgram {
 private:
 	idStrList									fileList;
-	idStr										filename;
+	idStr 										filename;
 	int											filenum;
 
 	int											numVariables;
@@ -518,7 +518,7 @@ public:
 	statement_t									&GetStatement( int index );
 	int											NumStatements( void ) { return statements.Num(); }
 
-	int											GetReturnedInteger( void );
+	int 										GetReturnedInteger( void );
 
 	void										ReturnFloat( float value );
 	void										ReturnInteger( int value );

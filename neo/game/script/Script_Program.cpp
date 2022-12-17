@@ -795,7 +795,7 @@ void idVarDef::PrintInfo( idFile *file, int instructionPointer ) const {
 				break;
 
 			case ev_float :
-				file->Printf( "%f", *value.floatPtr );
+                file->Printf( "%f", *value.floatPtr );
 				break;
 
 			case ev_virtualfunction :
@@ -1647,7 +1647,7 @@ void idProgram::BeginCompilation( void ) {
 		// make the first statement a return for a "NULL" function
 		statement = AllocStatement();
 		statement->linenumber	= 0;
-		statement->file			= 0;
+		statement->file 		= 0;
 		statement->op			= OP_RETURN;
 		statement->a			= NULL;
 		statement->b			= NULL;
@@ -2098,7 +2098,7 @@ int idProgram::CalculateChecksum( bool forOldSavegame ) const {
 			     && statements[i].flags == statement_t::FLAG_OBJECTCALL_IMPL_NOT_PARSED_YET ) {
 				statementList[i].c = constantZeroNum;
 			} else {
-				statementList[i].c = statements[i].c->num;
+			statementList[i].c = statements[i].c->num;
 			}
 		} else {
 			statementList[i].c = -1;

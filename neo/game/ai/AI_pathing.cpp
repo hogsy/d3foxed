@@ -595,6 +595,7 @@ pathNode_t *BuildPathTree( const obstacle_t *obstacles, int numObstacles, const 
 	pathNode_t *root, *node, *child;
 	// gcc 4.0
 	idQueueTemplate<pathNode_t, offsetof( pathNode_t, next ) > pathNodeQueue, treeQueue;
+
 	root = pathNodeAllocator.Alloc();
 	root->Init();
 	root->pos = startPos;

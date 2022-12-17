@@ -170,7 +170,7 @@ void idInterpreter::Reset( void ) {
 	currentFunction = 0;
 	NextInstruction( 0 );
 
-	threadDying	=	false;
+	threadDying 	= false;
 	doneProcessing	= true;
 }
 
@@ -389,7 +389,7 @@ idInterpreter::StackTrace
 */
 void idInterpreter::StackTrace( void ) const {
 	const function_t	*f;
-	int					i;
+	int 				i;
 	int					top;
 
 	if ( callStackDepth == 0 ) {
@@ -552,7 +552,7 @@ NOTE: If this is called from within a event called by this interpreter, the func
 ====================
 */
 void idInterpreter::EnterFunction( const function_t *func, bool clearStack ) {
-	int			c;
+	int 		c;
 	prstack_t	*stack;
 
 	if ( clearStack ) {
@@ -587,7 +587,7 @@ void idInterpreter::EnterFunction( const function_t *func, bool clearStack ) {
 			gameLocal.Printf( "%d: call '%s' from '%s'(line %d)%s\n", gameLocal.time, func->Name(), currentFunction->Name(),
 				gameLocal.program.GetStatement( instructionPointer ).linenumber, clearStack ? " clear stack" : "" );
 		} else {
-			gameLocal.Printf( "%d: call '%s'%s\n", gameLocal.time, func->Name(), clearStack ? " clear stack" : "" );
+            gameLocal.Printf( "%d: call '%s'%s\n", gameLocal.time, func->Name(), clearStack ? " clear stack" : "" );
 		}
 	}
 
@@ -681,11 +681,11 @@ idInterpreter::CallEvent
 ================
 */
 void idInterpreter::CallEvent( const function_t *func, int argsize ) {
-	int					i;
+	int 				i;
 	int					j;
 	varEval_t			var;
-	int					pos;
-	int					start;
+	int 				pos;
+	int 				start;
 	intptr_t			data[ D_EVENT_MAXARGS ];
 	const idEventDef	*evdef;
 	const char			*format;
@@ -852,11 +852,11 @@ idInterpreter::CallSysEvent
 ================
 */
 void idInterpreter::CallSysEvent( const function_t *func, int argsize ) {
-	int					i;
+	int 				i;
 	int					j;
 	varEval_t			source;
-	int					pos;
-	int					start;
+	int 				pos;
+	int 				start;
 	intptr_t			data[ D_EVENT_MAXARGS ];
 	const idEventDef	*evdef;
 	const char			*format;
@@ -939,7 +939,7 @@ bool idInterpreter::Execute( void ) {
 	varEval_t	var_c;
 	varEval_t	var;
 	statement_t	*st;
-	int			runaway;
+	int 		runaway;
 	idThread	*newThread;
 	float		floatVal;
 	idScriptObject *obj;

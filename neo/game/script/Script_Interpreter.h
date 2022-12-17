@@ -31,28 +31,28 @@ If you have questions concerning this license or the applicable additional terms
 
 class idThread;
 
-#define MAX_STACK_DEPTH	64
+#define MAX_STACK_DEPTH 	64
 #define LOCALSTACK_SIZE 	(6144 * 2)
 
 typedef struct prstack_s {
-	int					s;
+	int 				s;
 	const function_t	*f;
-	int					stackbase;
+	int 				stackbase;
 } prstack_t;
 
 class idInterpreter {
 private:
 	prstack_t			callStack[ MAX_STACK_DEPTH ];
-	int					callStackDepth;
-	int					maxStackDepth;
+	int 				callStackDepth;
+	int 				maxStackDepth;
 
 	byte				localstack[ LOCALSTACK_SIZE ];
-	int					localstackUsed;
-	int					localstackBase;
-	int					maxLocalstackUsed;
+	int 				localstackUsed;
+	int 				localstackBase;
+	int 				maxLocalstackUsed;
 
 	const function_t	*currentFunction;
-	int					instructionPointer;
+	int 				instructionPointer;
 
 	int					popParms;
 	const idEventDef	*multiFrameEvent;

@@ -31,8 +31,8 @@ If you have questions concerning this license or the applicable additional terms
 const char * const RESULT_STRING = "<RESULT>";
 
 typedef struct opcode_s {
-	const char	*name;
-	const char	*opname;
+	const char		*name;
+	const char		*opname;
 	int			priority;
 	bool		rightAssociative;
 	idVarDef	*type_a;
@@ -197,7 +197,7 @@ enum {
 class idCompiler {
 private:
 	static bool		punctuationValid[ 256 ];
-	static const char		*punctuation[];
+	static const char	*punctuation[];
 
 	idParser		parser;
 	idParser		*parserPtr;

@@ -583,6 +583,20 @@ void idGameLocal::ServerWriteSnapshot( int clientNum, int sequence, idBitMsg &ms
 	numSourceAreas = gameRenderWorld->BoundsInAreas( spectated->GetPlayerPhysics()->GetAbsBounds(), sourceAreas, idEntity::MAX_PVS_AREAS );
 	pvsHandle = gameLocal.pvs.SetupCurrentPVS( sourceAreas, numSourceAreas, PVS_NORMAL );
 
+#ifdef _D3XP
+	// Add portalSky areas to PVS
+	if ( portalSkyEnt.GetEntity() ) {
+		pvsHandle_t	otherPVS, newPVS;
+		idEntity *skyEnt = portalSkyEnt.GetEntity();
+
+		otherPVS = gameLocal.pvs.SetupCurrentPVS( skyEnt->GetPVSAreas(), skyEnt->GetNumPVSAreas() );
+		newPVS = gameLocal.pvs.MergeCurrentPVS( pvsHandle, otherPVS );
+		pvs.FreeCurrentPVS( pvsHandle );
+		pvs.FreeCurrentPVS( otherPVS );
+		pvsHandle = newPVS;
+	}
+#endif
+
 #if ASYNC_WRITE_TAGS
 	idRandom tagRandom;
 	tagRandom.SetSeed( random.RandomInt() );
@@ -1114,6 +1128,20 @@ void idGameLocal::ClientReadSnapshot( int clientNum, int sequence, const int gam
 	numSourceAreas = gameRenderWorld->BoundsInAreas( spectated->GetPlayerPhysics()->GetAbsBounds(), sourceAreas, idEntity::MAX_PVS_AREAS );
 	pvsHandle = gameLocal.pvs.SetupCurrentPVS( sourceAreas, numSourceAreas, PVS_NORMAL );
 
+#ifdef _D3XP
+	// Add portalSky areas to PVS
+	if ( portalSkyEnt.GetEntity() ) {
+		pvsHandle_t	otherPVS, newPVS;
+		idEntity *skyEnt = portalSkyEnt.GetEntity();
+
+		otherPVS = gameLocal.pvs.SetupCurrentPVS( skyEnt->GetPVSAreas(), skyEnt->GetNumPVSAreas() );
+		newPVS = gameLocal.pvs.MergeCurrentPVS( pvsHandle, otherPVS );
+		pvs.FreeCurrentPVS( pvsHandle );
+		pvs.FreeCurrentPVS( otherPVS );
+		pvsHandle = newPVS;
+	}
+#endif
+
 	// read the PVS from the snapshot
 #if ASYNC_WRITE_PVS
 	int serverPVS[idEntity::MAX_PVS_AREAS];
@@ -1152,7 +1180,7 @@ void idGameLocal::ClientReadSnapshot( int clientNum, int sequence, const int gam
 		// if the entity is not in the snapshot PVS
 		if ( !( snapshot->pvs[ent->entityNumber >> 5] & ( 1 << ( ent->entityNumber & 31 ) ) ) ) {
 			if ( ent->PhysicsTeamInPVS( pvsHandle ) ) {
-				if ( ent->entityNumber >= MAX_CLIENTS && ent->entityNumber < mapSpawnCount ) {
+				if ( ent->entityNumber >= MAX_CLIENTS && ent->entityNumber < mapSpawnCount && !ent->spawnArgs.GetBool("net_dynamic", "0")) { //_D3XP
 					// server says it's not in PVS, client says it's in PVS
 					// if that happens on map entities, most likely something is wrong
 					// I can see that moving pieces along several PVS could be a legit situation though
@@ -1160,6 +1188,10 @@ void idGameLocal::ClientReadSnapshot( int clientNum, int sequence, const int gam
 					common->DWarning( "client thinks map entity 0x%x (%s) is stale, sequence 0x%x", ent->entityNumber, ent->name.c_str(), sequence );
 				} else {
 					ent->FreeModelDef();
+#ifdef CTF
+					// possible fix for left over lights on CTF flag
+					ent->FreeLightDef();
+#endif
 					ent->UpdateVisuals();
 					ent->GetPhysics()->UnlinkClip();
 				}
@@ -1401,6 +1433,14 @@ void idGameLocal::ClientProcessReliableMessage( int clientNum, const idBitMsg &m
 			break;
 		}
 		case GAME_RELIABLE_MESSAGE_RESTART: {
+#ifdef _D3XP
+			int newServerInfo = msg.ReadBits(1);
+			if(newServerInfo) {
+				idDict info;
+				msg.ReadDeltaDict( info, NULL );
+				gameLocal.SetServerInfo( info );
+			}
+#endif
 			MapRestart();
 			break;
 		}
@@ -1496,6 +1536,11 @@ gameReturn_t idGameLocal::ClientPrediction( int clientNum, const usercmd_t *clie
 		isNewFrame = false;
 	}
 
+#ifdef _D3XP
+	slow.Set( time, previousTime, msec, framenum, realClientTime );
+	fast.Set( time, previousTime, msec, framenum, realClientTime );
+#endif
+
 	// set the user commands for this frame
 	memcpy( usercmds, clientCmds, numClients * sizeof( usercmds[ 0 ] ) );
 
@@ -1580,7 +1625,7 @@ bool idGameLocal::DownloadRequest( const char *IP, const char *guid, const char 
 				reply += ";";
 			}
 			if ( pakList[ i ][ 0 ] == '\0' ) {
- 				if ( i == 0 ) {
+				if ( i == 0 ) {
 					// pak 0 will always miss when client doesn't ask for game bin
 					common->DPrintf( "no game pak request\n" );
 				} else {
@@ -1606,7 +1651,7 @@ bool idGameLocal::DownloadRequest( const char *IP, const char *guid, const char 
 		idStr::Copynz( urls, reply, MAX_STRING_CHARS );
 	}
 
-  return true;
+	return true;
 }
 
 /*
