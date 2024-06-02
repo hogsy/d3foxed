@@ -2480,13 +2480,15 @@ ammo_t idWeapon::GetAmmoNumForName( const char *ammoname ) {
 			}
 		}
 		if ( i == 2 ) {
-			gameLocal.Error( "Unknown ammo type '%s'", ammoname );
+			gameLocal.Warning( "Unknown ammo type '%s'", ammoname );
+			return 0;
 		}
 #endif
 	}
 
 	if ( ( num < 0 ) || ( num >= AMMO_NUMTYPES ) ) {
-		gameLocal.Error( "Ammo type '%s' value out of range.  Maximum ammo types is %d.\n", ammoname, AMMO_NUMTYPES );
+		gameLocal.Warning( "Ammo type '%s' value out of range.  Maximum ammo types is %d.\n", ammoname, AMMO_NUMTYPES );
+		return 0;
 	}
 
 	return ( ammo_t )num;

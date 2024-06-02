@@ -1483,7 +1483,8 @@ void idAFEntity_WithAttachedHead::SetupHead( void ) {
 		jointName = spawnArgs.GetString( "head_joint" );
 		joint = animator.GetJointHandle( jointName );
 		if ( joint == INVALID_JOINT ) {
-			gameLocal.Error( "Joint '%s' not found for 'head_joint' on '%s'", jointName.c_str(), name.c_str() );
+			gameLocal.Warning( "Joint '%s' not found for 'head_joint' on '%s'", jointName.c_str(), name.c_str() );
+			return;
 		}
 
 		headEnt = static_cast<idAFAttachment *>( gameLocal.SpawnEntityType( idAFAttachment::Type, NULL ) );
