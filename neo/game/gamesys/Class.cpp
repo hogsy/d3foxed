@@ -323,7 +323,7 @@ idClass::DisplayInfo_f
 ================
 */
 void idClass::DisplayInfo_f( const idCmdArgs &args ) {
-	gameLocal.Printf( "Class memory status: %i bytes allocated in %i objects\n", memused, numobjects );
+	gameLocal.Printf( "Class memory status: %li bytes allocated in %i objects\n", memused, numobjects );
 }
 
 /*

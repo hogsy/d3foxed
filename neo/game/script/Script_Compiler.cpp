@@ -2684,6 +2684,6 @@ void idCompiler::CompileFile( const char *text, const char *filename, bool toCon
 
 	compile_time.Stop();
 	if ( !toConsole ) {
-		gameLocal.Printf( "Compiled '%s': %u ms\n", filename, compile_time.Milliseconds() );
+		gameLocal.Printf( "Compiled '%s': %f ms\n", filename, compile_time.Milliseconds() );
 	}
 }
