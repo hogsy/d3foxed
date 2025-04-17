@@ -161,7 +161,7 @@ ELSE()
 	set(D3XP_TARGET_NAME "fhGame-roe-x86")
 ENDIF()
 
-add_definitions(-D__DOOM__ -DGAME_DLL -D_D3XP)
+add_definitions(-D__DOOM__ -D_D3XP)
 add_library(${D3XP_TARGET_NAME} SHARED ${SOURCES})
 target_link_libraries(${D3XP_TARGET_NAME} idlib)
 set_property(TARGET ${D3XP_TARGET_NAME} PROPERTY FOLDER dlls)  

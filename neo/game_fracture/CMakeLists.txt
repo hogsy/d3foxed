@@ -32,7 +32,7 @@ SET(SOURCES
         Entity.h
         Fx.cpp
         Fx.h
-        Game.def
+        #Game.def
         Game.h
         GameEdit.cpp
         GameEdit.h
@@ -138,7 +138,7 @@ SET(SOURCES
         WorldSpawn.cpp
         WorldSpawn.h
         precompiled.h
-        ../framework/BuildVersion.cpp
+        #../framework/BuildVersion.cpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -154,16 +154,10 @@ source_group(game\\GameSys gamesys/.*)
 source_group(game\\Physics physics/.*)
 source_group(game\\Script script/.*)
 
-IF (CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT ID_ENFORCE32BIT)
-    set(GAME_TARGET_NAME "fxgame-x64")
-ELSE ()
-    set(GAME_TARGET_NAME "fxgame-x86")
-ENDIF ()
+add_definitions(-D__DOOM__)
+add_library(fxgame OBJECT ${SOURCES})
+target_link_libraries(fxgame idlib)
+set_property(TARGET fxgame PROPERTY FOLDER dlls)
+set_cpu_arch(fxgame)
 
-add_definitions(-D__DOOM__ -DGAME_DLL)
-add_library(${GAME_TARGET_NAME} SHARED ${SOURCES})
-target_link_libraries(${GAME_TARGET_NAME} idlib)
-set_property(TARGET ${GAME_TARGET_NAME} PROPERTY FOLDER dlls)
-set_cpu_arch(${GAME_TARGET_NAME})
-
-set_property(GLOBAL PROPERTY GLOB_GAME_TARGET_NAME "${GAME_TARGET_NAME}")
+set_property(GLOBAL PROPERTY GLOB_GAME_TARGET_NAME "fxgame")
