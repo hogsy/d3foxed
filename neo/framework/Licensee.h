@@ -34,7 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
-#define GAME_NAME						"fhDOOM"		// appears on window titles and errors
+#define GAME_NAME "d3Foxed"// appears on window titles and errors
 
 // paths
 #define	CD_BASEDIR						"Doom"

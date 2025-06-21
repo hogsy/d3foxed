@@ -16,77 +16,6 @@ ENDIF ()
 set_cpu_arch(glew)
 
 ###############################################################################
-######################## JPEG #################################################
-###############################################################################
-SET(SOURCES
-        renderer/jpeg-6/jcapimin.c
-        renderer/jpeg-6/jcapistd.c
-        renderer/jpeg-6/jccoefct.c
-        renderer/jpeg-6/jccolor.c
-        renderer/jpeg-6/jcdctmgr.c
-        renderer/jpeg-6/jchuff.c
-        renderer/jpeg-6/jchuff.h
-        renderer/jpeg-6/jcinit.c
-        renderer/jpeg-6/jcmainct.c
-        renderer/jpeg-6/jcmarker.c
-        renderer/jpeg-6/jcmaster.c
-        renderer/jpeg-6/jcomapi.c
-        renderer/jpeg-6/jconfig.h
-        renderer/jpeg-6/jcparam.c
-        renderer/jpeg-6/jcphuff.c
-        renderer/jpeg-6/jcprepct.c
-        renderer/jpeg-6/jcsample.c
-        renderer/jpeg-6/jctrans.c
-        renderer/jpeg-6/jdapimin.c
-        renderer/jpeg-6/jdapistd.c
-        renderer/jpeg-6/jdatadst.c
-        renderer/jpeg-6/jdatasrc.c
-        renderer/jpeg-6/jdcoefct.c
-        renderer/jpeg-6/jdcolor.c
-        renderer/jpeg-6/jdct.h
-        renderer/jpeg-6/jddctmgr.c
-        renderer/jpeg-6/jdhuff.c
-        renderer/jpeg-6/jdhuff.h
-        renderer/jpeg-6/jdinput.c
-        renderer/jpeg-6/jdmainct.c
-        renderer/jpeg-6/jdmarker.c
-        renderer/jpeg-6/jdmaster.c
-        renderer/jpeg-6/jdmerge.c
-        renderer/jpeg-6/jdphuff.c
-        renderer/jpeg-6/jdpostct.c
-        renderer/jpeg-6/jdsample.c
-        renderer/jpeg-6/jdtrans.c
-        renderer/jpeg-6/jerror.c
-        renderer/jpeg-6/jerror.h
-        renderer/jpeg-6/jfdctflt.c
-        renderer/jpeg-6/jfdctfst.c
-        renderer/jpeg-6/jfdctint.c
-        renderer/jpeg-6/jidctflt.c
-        renderer/jpeg-6/jidctfst.c
-        renderer/jpeg-6/jidctint.c
-        renderer/jpeg-6/jidctred.c
-        renderer/jpeg-6/jinclude.h
-        #renderer/jpeg-6/jload.c
-        renderer/jpeg-6/jmemansi.c
-        #renderer/jpeg-6/jmemdos.c
-        renderer/jpeg-6/jmemmgr.c
-        #renderer/jpeg-6/jmemname.c
-        #renderer/jpeg-6/jmemnobs.c
-        renderer/jpeg-6/jmemsys.h
-        renderer/jpeg-6/jmorecfg.h
-        renderer/jpeg-6/jpegint.h
-        renderer/jpeg-6/jpeglib.h
-        #renderer/jpeg-6/jpegtran.c
-        renderer/jpeg-6/jquant1.c
-        renderer/jpeg-6/jquant2.c
-        renderer/jpeg-6/jutils.c
-        renderer/jpeg-6/jversion.h
-        )
-add_library(jpeg-6 STATIC ${SOURCES})
-SET_PROPERTY(TARGET jpeg-6 PROPERTY FOLDER 3rdParty)
-set_cpu_arch(jpeg-6)
-
-###############################################################################
 ######################## OGG VORBIS ###########################################
 ###############################################################################
 SET(SOURCES
@@ -948,7 +877,6 @@ IF (MSVC)
     source_group(Framework framework/.*)
     source_group(Framework\\async framework/async/.*)
     source_group(Renderer renderer/.*)
-    source_group(Renderer\\jpeg6 renderer/jpeg-6/.*)
     source_group(Renderer\\GL renderer/GL/.*)
     source_group(Sound sound/.*)
     source_group(Sound\\ogg sound/OggVorbis/ogg/.*)
@@ -1041,7 +969,6 @@ if (UNIX)
             idlib
             #    curl
             glew
-            jpeg-6
             oggvorbis
             ${EXTERNAL_LIBS})
 else ()
@@ -1050,14 +977,12 @@ else ()
                 idlib
                 curl
                 glew
-                jpeg-6
                 oggvorbis
                 ${EXTERNAL_LIBS})
     else ()
         set(LINK_LIBS
                 idlib
                 glew
-                jpeg-6
                 oggvorbis
                 ${EXTERNAL_LIBS})
     endif ()

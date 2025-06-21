@@ -32,6 +32,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "../framework/File.h"
 #include "tr_local.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "../external/stb_image.h"
+
 namespace {
 	//The dwCaps2 member of the DDSCAPS2 structure can be set to one or more of the following values.Flag	Value
 	const uint32 DDSCAPS2_CUBEMAP = 0x00000200;
@@ -106,15 +109,26 @@ bool fhImageData::TryLoadFile( const char* filename, const char* ext, fhImageDat
 	return true;
 }
 
-
-bool fhImageData::LoadFile(const char* filename, fhImageData* imageData, bool forceRgba, ID_TIME_T* timestamp) {
-	if (!forceRgba) {
-		if (TryLoadFile(filename, "dds", imageData, timestamp, &fhImageData::LoadDDS)){
+bool fhImageData::LoadFile( const char *filename, fhImageData *imageData, bool forceRgba, ID_TIME_T *timestamp )
+{
+	if ( !forceRgba )
+	{
+		if ( TryLoadFile( filename, "dds", imageData, timestamp, &fhImageData::LoadDDS ) )
+		{
 			return true;
 		}
 	}
 
-	if (TryLoadFile( filename, "tga", imageData, timestamp, &fhImageData::LoadTGA )){
+	if ( TryLoadFile( filename, "tga", imageData, timestamp, &fhImageData::LoadSTB ) )
+	{
+		return true;
+	}
+	if ( TryLoadFile( filename, "png", imageData, timestamp, &fhImageData::LoadSTB ) )
+	{
+		return true;
+	}
+	if ( TryLoadFile( filename, "jpg", imageData, timestamp, &fhImageData::LoadSTB ) )
+	{
 		return true;
 	}
 
@@ -233,37 +247,18 @@ bool fhImageData::LoadFile(const char* filename, bool toRgba /* = false */) {
 	name.ExtractFileExtension(ext);
 
 	bool ok = false;
-	if (ext == "tga") {
-		ok = LoadTGA(name.c_str(), toRgba);            // try tga first
-		if (!ok) {
-			name.StripFileExtension();
-			name.DefaultFileExtension( ".jpg" );
-			common->Warning( "jpg loading not implemented yet" );
-			ok = false;
-			//ok = LoadJPG( name.c_str(), pic, width, height, timestamp );
-		}
+	if ( ext == "tga" || ext == "png" || ext == "psd" || ext == "gif" || ext == "bmp" )
+	{
+		ok = LoadSTB( name.c_str(), toRgba );
 	}
-	else if (ext == "dds") {
-		if (toRgba) {
-			common->Warning("Cannot convert compressed data to RGBA");
+	else if ( ext == "dds" )
+	{
+		if ( toRgba )
+		{
+			common->Warning( "Cannot convert compressed data to RGBA" );
 			return false;
 		}
-		ok = LoadDDS(name.c_str());
-	}
-	else if (ext == "pcx") {
-		assert( false && "pcx loading not implemented yet" );
-		ok = false;
-		//ok = LoadPCX32( name.c_str(), pic, width, height, timestamp );
-	}
-	else if (ext == "bmp") {
-		assert( false && "bmp loading not implemented yet" );
-		ok = false;
-		//ok = LoadBMP( name.c_str(), pic, width, height, timestamp );
-	}
-	else if (ext == "jpg") {
-		assert( false && "jpg loading not implemented yet" );
-		ok = false;
-		//ok = LoadJPG( name.c_str(), pic, width, height, timestamp );
+		ok = LoadDDS( name.c_str() );
 	}
 
 	//
@@ -311,157 +306,180 @@ bool fhImageData::LoadDDS( const char* filename, bool toRgba ) {
 	return false;
 }
 
-bool fhImageData::LoadTGA(const char* filename, bool toRgba) {
-	fhStaticBuffer<byte> buffer;
-	if (LoadFileIntoBuffer(filename, buffer)) {
-		return LoadTGA(buffer, toRgba);
+bool fhImageData::LoadSTB( const char *filename, bool toRgba )
+{
+	fhStaticBuffer< byte > buffer;
+	if ( LoadFileIntoBuffer( filename, buffer ) )
+	{
+		return LoadSTB( buffer, toRgba );
 	}
 
 	return false;
 }
 
-bool fhImageData::LoadDDS(fhStaticBuffer<byte>& buffer, bool toRgba) {
+bool fhImageData::LoadDDS( fhStaticBuffer< byte > &buffer, bool toRgba )
+{
 
-	if (toRgba) {
+	if ( toRgba )
+	{
 		//TODO(johl): currently we just assume, that data from dds files can not be
 		//            converted to RGBA.
 		return false;
 	}
 
-	if (buffer.Num() < sizeof(ddsFileHeader_t)) {
+	if ( buffer.Num() < sizeof( ddsFileHeader_t ) )
+	{
 		return false;
 	}
 
 	data = buffer.Release();
 
-	unsigned long magic = LittleLong(*(unsigned long *)data);
-	ddsFileHeader_t	*header = (ddsFileHeader_t *)(data + 4);
+	unsigned long    magic  = LittleLong( *( unsigned long * ) data );
+	ddsFileHeader_t *header = ( ddsFileHeader_t * ) ( data + 4 );
 
 	// ( not byte swapping dwReserved1 dwReserved2 )
-	header->dwSize = LittleLong(header->dwSize);
-	header->dwFlags = LittleLong(header->dwFlags);
-	header->dwHeight = LittleLong(header->dwHeight);
-	header->dwWidth = LittleLong(header->dwWidth);
-	header->dwPitchOrLinearSize = LittleLong(header->dwPitchOrLinearSize);
-	header->dwDepth = LittleLong(header->dwDepth);
-	header->dwMipMapCount = LittleLong(header->dwMipMapCount);
-	header->dwCaps1 = LittleLong(header->dwCaps1);
-	header->dwCaps2 = LittleLong(header->dwCaps2);
+	header->dwSize              = LittleLong( header->dwSize );
+	header->dwFlags             = LittleLong( header->dwFlags );
+	header->dwHeight            = LittleLong( header->dwHeight );
+	header->dwWidth             = LittleLong( header->dwWidth );
+	header->dwPitchOrLinearSize = LittleLong( header->dwPitchOrLinearSize );
+	header->dwDepth             = LittleLong( header->dwDepth );
+	header->dwMipMapCount       = LittleLong( header->dwMipMapCount );
+	header->dwCaps1             = LittleLong( header->dwCaps1 );
+	header->dwCaps2             = LittleLong( header->dwCaps2 );
 
-	header->ddspf.dwSize = LittleLong(header->ddspf.dwSize);
-	header->ddspf.dwFlags = LittleLong(header->ddspf.dwFlags);
-	header->ddspf.dwFourCC = LittleLong(header->ddspf.dwFourCC);
-	header->ddspf.dwRGBBitCount = LittleLong(header->ddspf.dwRGBBitCount);
-	header->ddspf.dwRBitMask = LittleLong(header->ddspf.dwRBitMask);
-	header->ddspf.dwGBitMask = LittleLong(header->ddspf.dwGBitMask);
-	header->ddspf.dwBBitMask = LittleLong(header->ddspf.dwBBitMask);
-	header->ddspf.dwABitMask = LittleLong(header->ddspf.dwABitMask);
+	header->ddspf.dwSize        = LittleLong( header->ddspf.dwSize );
+	header->ddspf.dwFlags       = LittleLong( header->ddspf.dwFlags );
+	header->ddspf.dwFourCC      = LittleLong( header->ddspf.dwFourCC );
+	header->ddspf.dwRGBBitCount = LittleLong( header->ddspf.dwRGBBitCount );
+	header->ddspf.dwRBitMask    = LittleLong( header->ddspf.dwRBitMask );
+	header->ddspf.dwGBitMask    = LittleLong( header->ddspf.dwGBitMask );
+	header->ddspf.dwBBitMask    = LittleLong( header->ddspf.dwBBitMask );
+	header->ddspf.dwABitMask    = LittleLong( header->ddspf.dwABitMask );
 
-	const char* fourcc = (const char*)&header->ddspf.dwFourCC;
+	const char *fourcc = ( const char * ) &header->ddspf.dwFourCC;
 
-	if (header->ddspf.dwFlags & DDSF_FOURCC) {
-		switch (header->ddspf.dwFourCC) {
-		case DDS_MAKEFOURCC('D', 'X', 'T', '1'):
-			if (header->ddspf.dwFlags & DDSF_ALPHAPIXELS) {
-				format = pixelFormat_t::DXT1_RGBA;
-			}
-			else {
-				format = pixelFormat_t::DXT1_RGB;
-			}
-			break;
-		case DDS_MAKEFOURCC('D', 'X', 'T', '3'):
-			format = pixelFormat_t::DXT3_RGBA;
-			break;
-		case DDS_MAKEFOURCC('D', 'X', 'T', '5'):
-			format = pixelFormat_t::DXT5_RGBA;
-			break;
-		case DDS_MAKEFOURCC( 'A', 'T', 'I', '2' ):
-			format = pixelFormat_t::RGTC;
-			break;
-		case DDS_MAKEFOURCC('R', 'X', 'G', 'B'):
-			format = pixelFormat_t::DXT5_RxGB;
-			break;
-		default:
-			common->Warning("Invalid compressed internal format\n");
-			return false;
+	if ( header->ddspf.dwFlags & DDSF_FOURCC )
+	{
+		switch ( header->ddspf.dwFourCC )
+		{
+			case DDS_MAKEFOURCC( 'D', 'X', 'T', '1' ):
+				if ( header->ddspf.dwFlags & DDSF_ALPHAPIXELS )
+				{
+					format = pixelFormat_t::DXT1_RGBA;
+				}
+				else
+				{
+					format = pixelFormat_t::DXT1_RGB;
+				}
+				break;
+			case DDS_MAKEFOURCC( 'D', 'X', 'T', '3' ):
+				format = pixelFormat_t::DXT3_RGBA;
+				break;
+			case DDS_MAKEFOURCC( 'D', 'X', 'T', '5' ):
+				format = pixelFormat_t::DXT5_RGBA;
+				break;
+			case DDS_MAKEFOURCC( 'A', 'T', 'I', '2' ):
+				format = pixelFormat_t::RGTC;
+				break;
+			case DDS_MAKEFOURCC( 'R', 'X', 'G', 'B' ):
+				format = pixelFormat_t::DXT5_RxGB;
+				break;
+			default:
+				common->Warning( "Invalid compressed internal format\n" );
+				return false;
 		}
 	}
-	else if ((header->ddspf.dwFlags & DDSF_RGBA) && header->ddspf.dwRGBBitCount == 32) {
+	else if ( ( header->ddspf.dwFlags & DDSF_RGBA ) && header->ddspf.dwRGBBitCount == 32 )
+	{
 		format = pixelFormat_t::BGRA;
 	}
-	else if ((header->ddspf.dwFlags & DDSF_RGB) && header->ddspf.dwRGBBitCount == 32) {
+	else if ( ( header->ddspf.dwFlags & DDSF_RGB ) && header->ddspf.dwRGBBitCount == 32 )
+	{
 		format = pixelFormat_t::BGRA;
 	}
-	else if ((header->ddspf.dwFlags & DDSF_RGB) && header->ddspf.dwRGBBitCount == 24) {
-		if (header->ddspf.dwFlags & DDSF_ID_INDEXCOLOR) {
+	else if ( ( header->ddspf.dwFlags & DDSF_RGB ) && header->ddspf.dwRGBBitCount == 24 )
+	{
+		if ( header->ddspf.dwFlags & DDSF_ID_INDEXCOLOR )
+		{
 			common->Warning( "Invalid uncompressed internal format\n" );
 			return false;
 		}
-		else {
+		else
+		{
 			format = pixelFormat_t::BGR;
 		}
 	}
-	else if (header->ddspf.dwRGBBitCount == 8) {
+	else if ( header->ddspf.dwRGBBitCount == 8 )
+	{
 		assert( false && "not supported" );
 		common->Warning( "Invalid uncompressed internal format\n" );
 		return false;
 	}
-	else {
+	else
+	{
 		common->Warning( "Invalid uncompressed internal format\n" );
 		return false;
 	}
 
-	if (header->dwCaps2 & DDSCAPS2_CUBEMAP) {
-		const char* missingFace = nullptr;
-		if (!(header->dwCaps2 & DDSCAPS2_CUBEMAP_POSITIVEX))
+	if ( header->dwCaps2 & DDSCAPS2_CUBEMAP )
+	{
+		const char *missingFace = nullptr;
+		if ( !( header->dwCaps2 & DDSCAPS2_CUBEMAP_POSITIVEX ) )
 			missingFace = "positiv x";
-		else if (!(header->dwCaps2 & DDSCAPS2_CUBEMAP_NEGATIVEX))
+		else if ( !( header->dwCaps2 & DDSCAPS2_CUBEMAP_NEGATIVEX ) )
 			missingFace = "negative x";
-		else if (!(header->dwCaps2 & DDSCAPS2_CUBEMAP_POSITIVEY))
+		else if ( !( header->dwCaps2 & DDSCAPS2_CUBEMAP_POSITIVEY ) )
 			missingFace = "positiv y";
-		else if (!(header->dwCaps2 & DDSCAPS2_CUBEMAP_NEGATIVEY))
+		else if ( !( header->dwCaps2 & DDSCAPS2_CUBEMAP_NEGATIVEY ) )
 			missingFace = "negative y";
-		else if (!(header->dwCaps2 & DDSCAPS2_CUBEMAP_POSITIVEZ))
+		else if ( !( header->dwCaps2 & DDSCAPS2_CUBEMAP_POSITIVEZ ) )
 			missingFace = "positiv z";
-		else if (!(header->dwCaps2 & DDSCAPS2_CUBEMAP_NEGATIVEZ))
+		else if ( !( header->dwCaps2 & DDSCAPS2_CUBEMAP_NEGATIVEZ ) )
 			missingFace = "negative z";
 
-		if (missingFace) {
+		if ( missingFace )
+		{
 			common->Warning( "not a valid cube map, face '%s' is missing", missingFace );
 			return false;
 		}
 
 		this->numFaces = 6;
 	}
-	else {
+	else
+	{
 		this->numFaces = 1;
 	}
 
 	this->numLevels = header->dwMipMapCount;
 
-	byte *imagedata = this->data + sizeof(ddsFileHeader_t) + 4;
+	byte *imagedata = this->data + sizeof( ddsFileHeader_t ) + 4;
 
-	for (uint32 j = 0; j < this->numFaces; ++j) {
+	for ( uint32 j = 0; j < this->numFaces; ++j )
+	{
 		int uw = header->dwWidth;
 		int uh = header->dwHeight;
 
-		for (uint32 i = 0; i < numLevels; i++) {
+		for ( uint32 i = 0; i < numLevels; i++ )
+		{
 			uint32 numBytes = DataSize( uw, uh, format );
 
 			uint32 faceIndex = j;// ddsFace2doomFace[j];
 
-			faces[faceIndex].levels[i].offset = static_cast<uint32>((uintptr_t)imagedata - (uintptr_t)this->data);
-			faces[faceIndex].levels[i].width = uw;
-			faces[faceIndex].levels[i].height = uh;
-			faces[faceIndex].levels[i].size = numBytes;
+			faces[ faceIndex ].levels[ i ].offset = static_cast< uint32 >( ( uintptr_t ) imagedata - ( uintptr_t ) this->data );
+			faces[ faceIndex ].levels[ i ].width  = uw;
+			faces[ faceIndex ].levels[ i ].height = uh;
+			faces[ faceIndex ].levels[ i ].size   = numBytes;
 
 			imagedata += numBytes;
 			uw /= 2;
 			uh /= 2;
-			if (uw < 1) {
+			if ( uw < 1 )
+			{
 				uw = 1;
 			}
-			if (uh < 1) {
+			if ( uh < 1 )
+			{
 				uh = 1;
 			}
 		}
@@ -470,233 +488,31 @@ bool fhImageData::LoadDDS(fhStaticBuffer<byte>& buffer, bool toRgba) {
 	return true;
 }
 
-bool fhImageData::LoadTGA(fhStaticBuffer<byte>& buffer, bool toRgba) {
-
-	struct TargaHeader {
-		unsigned char 	id_length, colormap_type, image_type;
-		unsigned short	colormap_index, colormap_length;
-		unsigned char	colormap_size;
-		unsigned short	x_origin, y_origin, width, height;
-		unsigned char	pixel_size, attributes;
-	};
-
-	if (buffer.Num() < sizeof(TargaHeader)) {
+bool fhImageData::LoadSTB( fhStaticBuffer< byte > &buffer, bool toRgba )
+{
+	int   width, height, channels;
+	byte *buf = stbi_load_from_memory( buffer.Get(), buffer.Num(), &width, &height, &channels, 4 );
+	if ( buf == nullptr )
+	{
 		return false;
 	}
 
-	int numBytes = 0;
-	int	columns = 0;
-	int rows = 0;
-	int numPixels = 0;
-	byte* buf_p = buffer.Get();
+	level_t level = {};
+	level.width   = width;
+	level.height  = height;
+	level.size    = width * height * 4;
+	level.offset  = 0;
 
-	TargaHeader	targa_header;
-	targa_header.id_length = *buf_p++;
-	targa_header.colormap_type = *buf_p++;
-	targa_header.image_type = *buf_p++;
+	fhStaticBuffer< byte > rgba( level.size );
+	memcpy( rgba.Get(), buf, level.size );
 
-	targa_header.colormap_index = LittleShort(*(short *)buf_p);
-	buf_p += 2;
-	targa_header.colormap_length = LittleShort(*(short *)buf_p);
-	buf_p += 2;
-	targa_header.colormap_size = *buf_p++;
-	targa_header.x_origin = LittleShort(*(short *)buf_p);
-	buf_p += 2;
-	targa_header.y_origin = LittleShort(*(short *)buf_p);
-	buf_p += 2;
-	targa_header.width = LittleShort(*(short *)buf_p);
-	buf_p += 2;
-	targa_header.height = LittleShort(*(short *)buf_p);
-	buf_p += 2;
-	targa_header.pixel_size = *buf_p++;
-	targa_header.attributes = *buf_p++;
+	this->faces[ 0 ].levels[ 0 ] = level;
+	this->numFaces               = 1;
+	this->numLevels              = 1;
+	this->data                   = rgba.Release();
+	this->format                 = pixelFormat_t::RGBA;
 
-	if (targa_header.image_type != 2 && targa_header.image_type != 10 && targa_header.image_type != 3) {
-		common->Error("LoadTGA( %s ): Only type 2 (RGB), 3 (gray), and 10 (RGB) TGA images supported\n", name);
-	}
-
-	if (targa_header.colormap_type != 0) {
-		common->Error("LoadTGA( %s ): colormaps not supported\n", name);
-	}
-
-	if ((targa_header.pixel_size != 32 && targa_header.pixel_size != 24) && targa_header.image_type != 3) {
-		common->Error("LoadTGA( %s ): Only 32 or 24 bit images supported (no colormaps)\n", name);
-	}
-
-	if (targa_header.image_type == 2 || targa_header.image_type == 3) {
-		numBytes = targa_header.width * targa_header.height * (targa_header.pixel_size >> 3);
-		if (numBytes > static_cast<int>(buffer.Num()) - 18 - targa_header.id_length) {
-			common->Error("LoadTGA( %s ): incomplete file\n", name);
-		}
-	}
-
-	columns = targa_header.width;
-	rows = targa_header.height;
-	numPixels = columns * rows;
-
-	level_t level;
-	level.width = columns;
-	level.height = rows;
-	level.size = numPixels * 4;
-	level.offset = 0;
-
-	fhStaticBuffer<byte> rgba(numPixels * 4);
-
-	if (targa_header.id_length != 0) {
-		buf_p += targa_header.id_length;  // skip TARGA image comment
-	}
-
-	if (targa_header.image_type == 2 || targa_header.image_type == 3)
-	{
-		// Uncompressed RGB or gray scale image
-		for (int row = rows - 1; row >= 0; row--)
-		{
-			byte* pixbuf = rgba.Get() + row*columns * 4;
-			for (int column = 0; column < columns; column++)
-			{
-				unsigned char red, green, blue, alphabyte;
-				switch (targa_header.pixel_size)
-				{
-
-				case 8:
-					blue = *buf_p++;
-					green = blue;
-					red = blue;
-					*pixbuf++ = red;
-					*pixbuf++ = green;
-					*pixbuf++ = blue;
-					*pixbuf++ = 255;
-					break;
-
-				case 24:
-					blue = *buf_p++;
-					green = *buf_p++;
-					red = *buf_p++;
-					*pixbuf++ = red;
-					*pixbuf++ = green;
-					*pixbuf++ = blue;
-					*pixbuf++ = 255;
-					break;
-				case 32:
-					blue = *buf_p++;
-					green = *buf_p++;
-					red = *buf_p++;
-					alphabyte = *buf_p++;
-					*pixbuf++ = red;
-					*pixbuf++ = green;
-					*pixbuf++ = blue;
-					*pixbuf++ = alphabyte;
-					break;
-				default:
-					common->Error("LoadTGA( %s ): illegal pixel_size '%d'\n", name, targa_header.pixel_size);
-					break;
-				}
-			}
-		}
-	}
-	else if (targa_header.image_type == 10) {   // Runlength encoded RGB images
-		unsigned char red, green, blue, alphabyte, packetHeader, packetSize, j;
-
-		red = 0;
-		green = 0;
-		blue = 0;
-		alphabyte = 0xff;
-
-		for (int row = rows - 1; row >= 0; row--) {
-			auto pixbuf = rgba.Get() + row*columns * 4;
-			for (int column = 0; column < columns;) {
-				packetHeader = *buf_p++;
-				packetSize = 1 + (packetHeader & 0x7f);
-				if (packetHeader & 0x80) {        // run-length packet
-					switch (targa_header.pixel_size) {
-					case 24:
-						blue = *buf_p++;
-						green = *buf_p++;
-						red = *buf_p++;
-						alphabyte = 255;
-						break;
-					case 32:
-						blue = *buf_p++;
-						green = *buf_p++;
-						red = *buf_p++;
-						alphabyte = *buf_p++;
-						break;
-					default:
-						common->Error("LoadTGA( %s ): illegal pixel_size '%d'\n", name, targa_header.pixel_size);
-						break;
-					}
-
-					for (j = 0; j < packetSize; j++) {
-						*pixbuf++ = red;
-						*pixbuf++ = green;
-						*pixbuf++ = blue;
-						*pixbuf++ = alphabyte;
-						column++;
-						if (column == columns) { // run spans across rows
-							column = 0;
-							if (row > 0) {
-								row--;
-							}
-							else {
-								goto breakOut;
-							}
-							pixbuf = rgba.Get() + row*columns * 4;
-						}
-					}
-				}
-				else {                            // non run-length packet
-					for (j = 0; j < packetSize; j++) {
-						switch (targa_header.pixel_size) {
-						case 24:
-							blue = *buf_p++;
-							green = *buf_p++;
-							red = *buf_p++;
-							*pixbuf++ = red;
-							*pixbuf++ = green;
-							*pixbuf++ = blue;
-							*pixbuf++ = 255;
-							break;
-						case 32:
-							blue = *buf_p++;
-							green = *buf_p++;
-							red = *buf_p++;
-							alphabyte = *buf_p++;
-							*pixbuf++ = red;
-							*pixbuf++ = green;
-							*pixbuf++ = blue;
-							*pixbuf++ = alphabyte;
-							break;
-						default:
-							common->Error("LoadTGA( %s ): illegal pixel_size '%d'\n", name, targa_header.pixel_size);
-							break;
-						}
-						column++;
-						if (column == columns) { // pixel packet run spans across rows
-							column = 0;
-							if (row > 0) {
-								row--;
-							}
-							else {
-								goto breakOut;
-							}
-							pixbuf = rgba.Get() + row*columns * 4;
-						}
-					}
-				}
-			}
-		breakOut:;
-		}
-	}
-
-	if ((targa_header.attributes & (1 << 5))) {			// image flp bit
-		R_VerticalFlip(rgba.Get(), level.width, level.height);
-	}
-
-	this->faces[0].levels[0] = level;
-	this->numFaces = 1;
-	this->numLevels = 1;
-	this->data = rgba.Release();
-	this->format = pixelFormat_t::RGBA;
+	STBI_FREE( buf );
 
 	return true;
 }

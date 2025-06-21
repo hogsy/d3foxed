@@ -105,9 +105,9 @@ public:
 	fhImageData& operator=(const fhImageData&) = delete;
 	fhImageData& operator=(fhImageData&& other);
 
-	bool        LoadFile(const char* filename, bool toRgba = false);
-	bool        LoadDDS( const char* filename, bool toRgba = false );
-	bool        LoadTGA(const char* filename, bool toRgba = false);
+	bool        LoadFile( const char *filename, bool toRgba = false );
+	bool        LoadDDS( const char *filename, bool toRgba = false );
+	bool        LoadSTB( const char *filename, bool toRgba = false );
 	bool        LoadProgram(const char* program);
 	bool        LoadCubeMap( const fhImageData sides[6], const char* name );
 	bool        LoadRgbaFromMemory( const byte* pic, uint32 width, uint32 height );
@@ -141,8 +141,8 @@ private:
 	static bool TryLoadFile( const char* filename, const char* ext, fhImageData* imageData, ID_TIME_T* timestamp, bool (fhImageData::*f)(fhStaticBuffer<byte>&, bool) );
 	bool        LoadFileIntoBuffer( const char* filename, fhStaticBuffer<byte>& buffer );
 
-	bool        LoadTGA(fhStaticBuffer<byte>& buffer, bool toRgba);
-	bool        LoadDDS(fhStaticBuffer<byte>& buffer, bool toRgba);
+	bool LoadDDS( fhStaticBuffer< byte > &buffer, bool toRgba );
+	bool LoadSTB( fhStaticBuffer< byte > &buffer, bool toRgba );
 
 	bool        ParseImageProgram_r(idLexer& src, bool noload, bool toRgba);
 
