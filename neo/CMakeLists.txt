@@ -1067,7 +1067,7 @@ if (Qt5Widgets_FOUND)
     set(LINK_LIBS ${LINK_LIBS} qteditors)
 endif ()
 
-set(TARGET_NAME "fhDOOM")
+set(TARGET_NAME "d3Foxed")
 add_definitions(-DGLEW_STATIC -D__DOOM__ -D__DOOM_DLL__)
 add_executable(${TARGET_NAME} ${SOURCES})
 target_link_libraries(${TARGET_NAME} ${LINK_LIBS})

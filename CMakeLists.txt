@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.2.0)
-project(fhDOOM)
+project(d3Foxed)
 
 OPTION(ID_ALLOW_TOOLS "Compile Tools" ON)
 OPTION(ID_ALLOW_MAYA "Compile Maya Tools" ON)

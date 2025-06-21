@@ -1,4 +1,4 @@
-# D3Foxed
+# d3Foxed
 
 <div align="center">
 
@@ -15,11 +15,16 @@
 
 ## About
 
-D3Foxed is a modified fork of the [fhDOOM](https://github.com/eXistence/fhDOOM) engine, which itself was a modified fork of the DOOM3 engine. Seeing as fhDOOM doesn't appear to be being developed anymore and I don't care much for retaining compatibility with Doom 3, I decided to spin my fork into its own thing.
+d3Foxed is a modified fork of the [fhDOOM](https://github.com/eXistence/fhDOOM) engine, which itself was a modified fork of the DOOM3 engine.
+Seeing as fhDOOM doesn't appear to be being developed anymore, I decided to spin my fork into its own thing.
 
-This project also incorporates a number of fixes from [dhewm3](https://github.com/dhewm/dhewm3).
+**This project does not aim to retain compatibility with Doom 3!**
+If that's something you care about, check out [dhewm3](https://github.com/dhewm/dhewm3).
 
-Because I don't have time to dedicate 110% of my time to this project, I would recommend perhaps looking [around a bit more](#similar-projects) before choosing this fork, as there are other forks that excell in areas where this fork is unlikely to focus on.
+That said, this project also incorporates a number of fixes from [dhewm3](https://github.com/dhewm/dhewm3).
+
+Because I don't have time to dedicate 110% of my time to this project, I would recommend perhaps looking [around a bit more](#similar-projects) before choosing this fork.
+There are other forks that excell in areas where this fork is unlikely to focus on.
 
 ## Changes
 
@@ -35,11 +40,11 @@ Because I don't have time to dedicate 110% of my time to this project, I would r
 * occlusion geometry is stored in a separate *.ocl file (*.map and *.proc are still the same)
 * ocl file optional, maps without ocl file work just fine (at the expense of performance)
 * dmap option 'exportObj' will export occlusion geometry to obj files
-* D3Foxed includes ocl files for all maps of the original game  
+* d3Foxed includes ocl files for all maps of the original game  
 * Soft particles
 * Parallax occlusion mapping (expects height data in the alpha channel of the specular map)
 * Added support for Qt based tools
-  * optional (can be excluded from the build, so you are not forced to install Qt to build D3Foxed)
+  * optional (can be excluded from the build, so you are not forced to install Qt to build d3Foxed)
   * Implemented some basic helpers
     * RenderWidget, so the engine can render easily to the GUI
     * several input widgets for colors, numbers and vectors
@@ -55,7 +60,7 @@ Because I don't have time to dedicate 110% of my time to this project, I would r
   * Added new r_mode's for HD/widescreen resolutions (r_mode also sets the aspect ratio)
   * Set font size of console via con_fontScale
   * Set size of console via con_size
-  * Minor fixes and cleanups in editor code (e.g. fixed auto save, removed some unused options)
+  * Minor fixes and clean-ups in editor code (e.g. fixed auto save, removed some unused options)
   * Renamed executable and game dll (the intention was to have fhDOOM installed next to the original doom binaries. Not sure if that still works)
   * Moved maya import stuff from dll to a stand-alone command line tool (maya2md5)
   * Compile most 3rd party stuff as separate libraries
@@ -72,19 +77,19 @@ See also [changes.md](changes.md) for complete history of all changes.
 ## Installation
 
 * ~~Download Binaries here: <http://www.facinghell.com/fhdoom/fhDOOM-1.5.2-1414.zip>~~
-* The recommended way to install D3Foxed is to unpack D3Foxed into its own directory and copy only those files from the original Doom3 that are needed:
+* The recommended way to install d3Foxed is to unpack d3Foxed into its own directory and copy only those files from the original Doom3 that are needed:
   * Extract zip to a location of your choice (e.g. c:\games)
-  * Copy 5 files from the original DOOM3 (CD or Steam) to base directory of D3Foxed (e.g. c:\games\D3Foxed\base):
+  * Copy 5 files from the original DOOM3 (CD or Steam) to base directory of d3Foxed (e.g. c:\games\d3Foxed\base):
     * pak000.pk4
     * pak001.pk4
     * pak002.pk4
     * pak003.pk4
     * pak004.pk4
   * Start game by clicking on fhDOOM.exe
-  * Don't forget to change the game's resolution (D3Foxed does not yet select your native resolution automatically).
+  * Don't forget to change the game's resolution (d3Foxed does not yet select your native resolution automatically).
 * Alternatively you can unpack the downloaded zip directly into an existing  Doom3 installation.
-  * As mentioned before, D3Foxed contains the last official patch (1.31), so some files (pak00[5-8].pk4 and Default.cfg) will be overwritten if this patch is already installed (e.g. you installed patch 1.31 manually or installed the game via Steam). Skipping these files should be fine as well.
-  * D3Foxed is usually not tested in combination with other mods, so if you have other stuff installed all bets are off.
+  * As mentioned before, d3Foxed contains the last official patch (1.31), so some files (pak00[5-8].pk4 and Default.cfg) will be overwritten if this patch is already installed (e.g. you installed patch 1.31 manually or installed the game via Steam). Skipping these files should be fine as well.
+  * d3Foxed is usually not tested in combination with other mods, so if you have other stuff installed all bets are off.
   * If you run into any issues, please try the clean and recommended installation as described above.
   * Future releases will very likely include a variant without the additional files from patch 1.31 to make this a bit easier.
 
@@ -96,26 +101,26 @@ Yes!
 Mod support is pretty much the same as in vanilla Doom3 1.3.1. 
 The only difference: game dll is named 'fxgame-x86' or 'fxgame-x64' (depending on your target architecture) instead of 'gamex86'.
 
-### Is D3Foxed compatible with mods for vanilla Doom3 1.3.1?
+### Is d3Foxed compatible with mods for vanilla Doom3 1.3.1?
 
 It depends.
 Pure content mods containing only textures, scripts, maps and such things should work just fine (only exception: custom ARB2 shaders won't work).
-Mods that come with a compiled game dll (gamex86.dll on windows, gamex86.so on linux) won't work. Those game dlls must be recompiled for D3Foxed.
+Mods that come with a compiled game dll (gamex86.dll on windows, gamex86.so on linux) won't work. Those game dlls must be recompiled for d3Foxed.
 
-### Can I use SikkMod with D3Foxed?
+### Can I use SikkMod with d3Foxed?
 
 No, because SikkMod is based on ARB2 shaders (see Q2).
 
-### Can I use HD texture mods (Wulfen, Monoxead, etc.) with D3Foxed?
+### Can I use HD texture mods (Wulfen, Monoxead, etc.) with d3Foxed?
 
 Yes (see Q2).
 
-### How do I (re)compile a mods game dll for D3Foxed?
+### How do I (re)compile a mods game dll for d3Foxed?
 
 Unfortunately, that's currently not that easy. You have two options:
 
- 1. If you don't care about existing installations of officially released D3Foxed binaries, you could just clone the latest D3Foxed version from github. You apply your changes to the game code and distribute the whole thing (executable and game dlls).
- 2. You clone the D3Foxed version from github that matches the latest official binary release. You apply your changes to the game code and distribute only the game dll to the user (the user must have D3Foxed installed). Pretty much like vanilla Doom3 1.3.1.
+ 1. If you don't care about existing installations of officially released d3Foxed binaries, you could just clone the latest d3Foxed version from github. You apply your changes to the game code and distribute the whole thing (executable and game dlls).
+ 2. You clone the d3Foxed version from github that matches the latest official binary release. You apply your changes to the game code and distribute only the game dll to the user (the user must have d3Foxed installed). Pretty much like vanilla Doom3 1.3.1.
 
 Both options are far from being good, but since i am working for the most part on the engine itself and not on the game code, i never felt the need to improve this. If you want to make a mod and need to compile your own game dll, let me know. If there is enough interest in better support for this, i will set up and release some kind of SDK to easily compile only the game code.
 
@@ -202,7 +207,7 @@ fhDOOM added and changed a couple of cvars. This list of cvars might be interest
     * simplifies messy fullscreen switch
 * I am pretty sure I forgot a lot of things, so you might discover more things that are pretty hacky or not working at all ;)
 
-## Building D3Foxed
+## Building d3Foxed
 
 Dependencies:
 
@@ -226,17 +231,17 @@ Setup:
     * run `cmake_msvc201x.cmd -DQTDIR=<QTDIR>`
     * or set an env var in windows: `QT_MSVC201x_X86=<QTDIR>`
     * `<QTDIR>` must point to your Qt installation so that `<QTDIR>/bin` contains all the Qt binaries (dll and exe files).
-    * Please keep in mind that D3Foxed needs a 32bit build of Qt
-* Compile D3Foxed from Visual Studio
-  * Debug and Run D3Foxed directly from Visual Studio
-  * D3Foxed will pick up the base directory in your repository automatically
-* The zip file from a D3Foxed release contains a pk4 file `pak100fhdoom.pk4`. This file contains all the new shaders and required asset files.
+    * Please keep in mind that d3Foxed needs a 32bit build of Qt
+* Compile d3Foxed from Visual Studio
+  * Debug and Run d3Foxed directly from Visual Studio
+  * d3Foxed will pick up the base directory in your repository automatically
+* The zip file from a d3Foxed release contains a pk4 file `pak100fhdoom.pk4`. This file contains all the new shaders and required asset files.
     You may have noticed that this file cannot be found in the git repository. For easier editing all asset files are loosely placed in the base
-    directory of the repository. You can directly edit these files or add new ones and D3Foxed will use them. These files are automatically packed up into  `pak100fhdoom.pk4` when you generate a distributable zip file (e.g. for release), see below for details.
+    directory of the repository. You can directly edit these files or add new ones and d3Foxed will use them. These files are automatically packed up into  `pak100fhdoom.pk4` when you generate a distributable zip file (e.g. for release), see below for details.
 * Generating distributable zip files: There are three special build targets that generate distributable zip files:
-  * `dist`: generates a zip file that contains D3Foxed and all required files from the official 1.31 patch (this is what is usually released)
+  * `dist`: generates a zip file that contains d3Foxed and all required files from the official 1.31 patch (this is what is usually released)
   * `dist_nopatch`: same as `dist` but without the files from the 1.31 patch
-  * `sdk`: generates a SDK to build only a game dll for D3Foxed (this is currently not used, not sure if its still working)
+  * `sdk`: generates a SDK to build only a game dll for d3Foxed (this is currently not used, not sure if its still working)
 
 ### Similar Projects
 
@@ -249,4 +254,4 @@ Setup:
 * [OpenTechEngine](https://github.com/OpenTechEngine/OpenTechBFG) (creation of standalone games, based on RBDOOM-3-BFG)
 * [Storm Engine 2](https://github.com/motorsep/StormEngine2) (creation of standalone games, based on RBDOOM-3-BFG)
 * [The Dark Mod](http://www.thedarkmod.com/) (total conversion, not sure if it can still run the original DOOM3 game)
-* <https://github.com/raynorpat/Doom3> Attempt to port rendersystem from DOOM-3-BFG to classic DOOM3
+* [Pat Raynor's Doom 3 fork](https://github.com/raynorpat/Doom3); attempts to port rendersystem from DOOM-3-BFG to classic DOOM3
