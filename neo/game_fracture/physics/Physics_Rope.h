@@ -114,7 +114,7 @@ namespace ms
 			return l;
 		}
 
-		static constexpr unsigned int DEFAULT_NUM_PARTICLES = 80;
+		static constexpr unsigned int DEFAULT_NUM_PARTICLES = 8;
 		std::vector< Particle >       particles;
 
 		// various properties shared between all the particles
