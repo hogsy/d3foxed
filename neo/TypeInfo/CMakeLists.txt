@@ -15,7 +15,7 @@ SET(SOURCES
   TypeInfoGen.h
 )
 
-add_definitions(-DID_TYPEINFO -D__DOOM_DLL__ -DID_ENABLE_CURL=0)
+add_definitions(-DID_TYPEINFO -DID_ENABLE_CURL=0)
 add_executable(TypeInfo ${SOURCES})
 target_link_libraries(TypeInfo idlib)
 SET_PROPERTY(TARGET TypeInfo PROPERTY FOLDER exes)

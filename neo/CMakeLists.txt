@@ -943,6 +943,7 @@ IF (MSVC)
     SET(SOURCES ${SOURCES} sys/win32/rc/doom.rc)
 ENDIF ()
 
+set(LINK_LIBS idlib fxgame)
 if (UNIX)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/sys/linux/oss/include)
     add_definitions(-Dlinux)
@@ -966,7 +967,7 @@ if (UNIX)
             ${OPENGL_gl_LIBRARY})
 
     set(LINK_LIBS
-            idlib
+            ${LINK_LIBS}
             #    curl
             glew
             oggvorbis
@@ -974,14 +975,14 @@ if (UNIX)
 else ()
     if (MSVC)
         set(LINK_LIBS
-                idlib
+                ${LINK_LIBS}
                 curl
                 glew
                 oggvorbis
                 ${EXTERNAL_LIBS})
     else ()
         set(LINK_LIBS
-                idlib
+                ${LINK_LIBS}
                 glew
                 oggvorbis
                 ${EXTERNAL_LIBS})
@@ -993,7 +994,7 @@ if (Qt5Widgets_FOUND)
 endif ()
 
 set(TARGET_NAME "d3Foxed")
-add_definitions(-DGLEW_STATIC -D__DOOM__ -D__DOOM_DLL__)
+add_definitions(-DGLEW_STATIC -D__DOOM__)
 add_executable(${TARGET_NAME} ${SOURCES})
 target_link_libraries(${TARGET_NAME} ${LINK_LIBS})
 get_property(GAME_TARGET_NAME GLOBAL PROPERTY GLOB_GAME_TARGET_NAME)
