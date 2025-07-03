@@ -159,7 +159,7 @@ ELSE()
 ENDIF()
 
 add_definitions(-D__DOOM__)
-add_library(${GAME_TARGET_NAME} SHARED ${SOURCES})
+add_library(${GAME_TARGET_NAME} OBJECT ${SOURCES})
 target_link_libraries(${GAME_TARGET_NAME} idlib)
 set_property(TARGET ${GAME_TARGET_NAME} PROPERTY FOLDER dlls) 
 set_cpu_arch(${GAME_TARGET_NAME})
