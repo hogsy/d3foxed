@@ -1035,6 +1035,7 @@ endif ()
 
 set_cpu_arch(${TARGET_NAME})
 
+#[[
 IF (WIN32)
 
     SET(DIST_NOPATCH_DIR ${CMAKE_BINARY_DIR}/dist/fhDOOM-nopatch)
@@ -1153,3 +1154,4 @@ IF (WIN32)
             )
 
 ENDIF ()
+#]]
